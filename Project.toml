@@ -3,6 +3,10 @@ uuid = "e87ab966-852e-4d0b-9cf3-1c8693995dd4"
 authors = ["Laslo Hunhold"]
 version = "1.0.0-DEV"
 
+[deps]
+Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
+libtakum_jll = "2acead13-4190-5b23-9738-715dd9fd1a00"
+
 [compat]
 julia = "1.6.7"
 
