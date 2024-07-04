@@ -112,12 +112,12 @@ Base.floatmin(::Type{Takum64}) = Base.bitcast(Takum64, 0x1000000000000001)
 Base.typemax(::Type{Takum8})  = Base.bitcast(Takum8,  0x01)
 Base.typemax(::Type{Takum16}) = Base.bitcast(Takum16, 0x0111)
 Base.typemax(::Type{Takum32}) = Base.bitcast(Takum32, 0x01111111)
-Base.typemax(::Type{Takum32}) = Base.bitcast(Takum64, 0x0111111111111111)
+Base.typemax(::Type{Takum64}) = Base.bitcast(Takum64, 0x0111111111111111)
 
 Base.floatmax(::Type{Takum8})  = Base.bitcast(Takum8,  0x01)
 Base.floatmax(::Type{Takum16}) = Base.bitcast(Takum16, 0x0111)
 Base.floatmax(::Type{Takum32}) = Base.bitcast(Takum32, 0x01111111)
-Base.floatmax(::Type{Takum32}) = Base.bitcast(Takum64, 0x0111111111111111)
+Base.floatmax(::Type{Takum64}) = Base.bitcast(Takum64, 0x0111111111111111)
 
 Base.maxintfloat(::Type{T}) where {T<:AnyTakum} = T(1.0)
 
