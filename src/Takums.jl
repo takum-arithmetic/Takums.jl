@@ -79,13 +79,13 @@ Base.ispow2(t::AnyTakum) = Base.isone(t)
 Base.iseven(t::AnyTakum) = Base.iszero(t)
 Base.isodd(t::AnyTakum) = Base.isone(t) || Base.isone(-t)
 
-# worst case precision n-12 (TODO: instance precision)
-function _precision(x::AnyTakum; base::Integer)
+# worst case precision n-12
+function Base.precision(T::Type{<:AnyTakum}; base::Integer = 2)
+	mantissa_bits = Dict(Takum8 => 0, Takum16 => 4, Takum32 => 20, Takum64 => 52)
 	base > 1 || throw(DomainError(base, "`base` cannot be less than 2."))
-	p = 0 # TODO: Takum8:0, Takum16:4, Takum32:20, Takum64:52
-	return base == 2 ? Int(p) : floor(Int, p / log2(base))
+	m = mantissa_bits[T]
+	return base == 2 ? Int(m) : floor(Int, m / log2(base))
 end
-Base.precision(::Type{AnyTakum}; base::Integer=2) = _precision(T, base)
 Base.precision(t::AnyTakum; base::Integer=2) = precision(typeof(t); base)
 
 # rounding
@@ -262,51 +262,18 @@ Base.widen(::Type{Takum32}) = Takum64
 Base.widemul(x::Union{Takum8, Takum16, Takum32}, y::Union{Takum8, Takum16, Takum32}) = Basen.widen(x) * Base.widen(y)
 
 # output
-function Base.show(io::IO, t::Takum8)
-	has_type_info = Takum8 === Base.get(io, :typeinfo, Any)
+function Base.show(io::IO, t::AnyTakum)
+	has_type_info = typeof(t) === Base.get(io, :typeinfo, Any)
 	if isnar(t)
 		Base.print(io, "NaR")
 	else
-		has_type_info || Base.print(io, "Takum8(")
-		Base.show(IOContext(io, :typeinfo=>Float16), Float16(t))
-		has_type_info || Base.print(io, ")")
-	end
-end
-function Base.show(io::IO, t::Takum16)
-	has_type_info = Takum16 === Base.get(io, :typeinfo, Any)
-	if isnar(t)
-		Base.print(io, "NaR")
-	else
-		has_type_info || Base.print(io, "Takum16(")
-		Base.show(IOContext(io, :typeinfo=>Float32), Float32(t))
-		has_type_info || Base.print(io, ")")
-	end
-end
-function Base.show(io::IO, t::Takum32)
-	has_type_info = Takum32 === Base.get(io, :typeinfo, Any)
-	if isnar(t)
-		Base.print(io, "NaR")
-	else
-		has_type_info || Base.print(io, "Takum32(")
-		Base.show(IOContext(io, :typeinfo=>Float64), Float64(t))
-		has_type_info || Base.print(io, ")")
-	end
-end
-function Base.show(io::IO, t::Takum64)
-	has_type_info = Takum64 === Base.get(io, :typeinfo, Any)
-	if isnar(t)
-		Base.print(io, "NaR")
-	else
-		has_type_info || Base.print(io, "Takum64(")
-		Base.show(IOContext(io, :typeinfo=>Float64), Float64(t))
+		has_type_info || Base.print(io, string(typeof(t)) * "(")
+		@Printf.printf(IOContext(io, :typeinfo=>typeof(t)), "%.*g", Base.precision(t; base = 10), Float64(t))
 		has_type_info || Base.print(io, ")")
 	end
 end
 
-Printf.tofloat(t::Takum8)  = Float16(t)
-Printf.tofloat(t::Takum16) = Float32(t)
-Printf.tofloat(t::Takum32) = Float64(t)
-Printf.tofloat(t::Takum64) = Float64(t)
+Printf.tofloat(t::AnyTakum) = Float64(t)
 
 # bitstring
 Base.bitstring(t::AnyTakum) = Base.bitstring(reinterpret(Unsigned, t))
@@ -339,10 +306,7 @@ for func in (:cbrt, :exp, :exp2, :exp10, :expm1,
           :asinh, :acosh, :atanh, :acsch, :asech, :acoth)
   @eval begin
      # TODO call into library
-     Base.$func(t::Takum8)  = Takum8(Base.$func(Float16(t)))
-     Base.$func(t::Takum16) = Takum16(Base.$func(Float32(t)))
-     Base.$func(t::Takum32) = Takum32(Base.$func(Float64(t)))
-     Base.$func(t::Takum64) = Takum64(Base.$func(Float64(t)))
+     Base.$func(t::AnyTakum)  = typeof(t)(Base.$func(Float64(t)))
   end
 end
 
