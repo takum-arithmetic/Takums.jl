@@ -89,7 +89,7 @@ Base.precision(::Type{AnyTakum}; base::Integer=2) = _precision(T, base)
 Base.precision(t::AnyTakum; base::Integer=2) = precision(typeof(t); base)
 
 # rounding
-Base.round(t::AnyTakum) = Base.round(Float64(t))
+Base.round(t::AnyTakum) = typeof(t)(Base.round(Float64(t)))
 
 Base.round(t::AnyTakum, r::RoundingMode{:ToZero})  = typeof(t)(Base.trunc(Float64(t)))
 Base.round(t::AnyTakum, r::RoundingMode{:Down})    = typeof(t)(Base.floor(Float64(t)))
