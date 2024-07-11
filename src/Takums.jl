@@ -18,7 +18,7 @@ primitive type Takum64 <: AbstractFloat 64 end
 AnyTakum = Union{Takum8, Takum16, Takum32, Takum64}
 
 # NaR representations
-const NaR8  = Base.bitcast(Takum8, 0x80)
+const NaR8  = Base.bitcast(Takum8,  0x80)
 const NaR16 = Base.bitcast(Takum16, 0x8000)
 const NaR32 = Base.bitcast(Takum32, 0x80000000)
 const NaR64 = Base.bitcast(Takum64, 0x8000000000000000)
