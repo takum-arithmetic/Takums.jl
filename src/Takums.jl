@@ -139,14 +139,11 @@ Takum64(f::Float32) = Base.bitcast(Takum64, @ccall libtakum.takum64_from_float32
 Takum64(f::Float64) = Base.bitcast(Takum64, @ccall libtakum.takum64_from_float64(f::Float64)::Int64)
 
 # conversion from integers with promote rules
-for takum_type in (Takum8, Takum16, Takum32, Takum64)
-	for int_type in (Bool, UInt8, Int8, UInt16, Int16, UInt32, Int32, UInt64, Int64)
-		@eval begin
-			(::Type{$takum_type})(i::($int_type)) = $takum_type(Float64(i))
-			Base.promote_rule(::Type{$takum_type}, ::Type{$int_type}) = $takum_type
-		end
-	end
-end
+Takum8(i::Integer)  = Base.convert(Takum8,  Base.convert(Float64, i))
+Takum16(i::Integer) = Base.convert(Takum16, Base.convert(Float64, i))
+Takum32(i::Integer) = Base.convert(Takum32, Base.convert(Float64, i))
+Takum64(i::Integer) = Base.convert(Takum64, Base.convert(Float64, i))
+Base.promote_rule(T::Type{<:AnyTakum}, ::Type{<:Integer}) = T
 
 # conversions to floating-point
 Base.Float16(t::Takum8)  = Float16(@ccall libtakum.takum8_to_float32(reinterpret(Signed, t)::Int8)::Float32)
@@ -163,31 +160,18 @@ Base.Float64(t::Takum32) = @ccall libtakum.takum32_to_float64(reinterpret(Signed
 Base.Float64(t::Takum64) = @ccall libtakum.takum64_to_float64(reinterpret(Signed, t)::Int64)::Float64
 
 # conversion to integer
-Takum8(i::Integer)  = Base.convert(Takum8,  Base.convert(Float64, i))
-Takum16(i::Integer) = Base.convert(Takum16, Base.convert(Float64, i))
-Takum32(i::Integer) = Base.convert(Takum32, Base.convert(Float64, i))
-Takum64(i::Integer) = Base.convert(Takum64, Base.convert(Float64, i))
+Base.unsafe_trunc(T::Type{<:Integer}, t::AnyTakum)  = Base.unsafe_trunc(T, Float64(t))
+Base.round(I::Type{<:Integer}, t::AnyTakum) = Base.round(I, Float64(t))
 
-Base.unsafe_trunc(T::Type{<:Integer}, t::Takum8)  = Base.unsafe_trunc(T, Float64(t))
-Base.unsafe_trunc(T::Type{<:Integer}, t::Takum16) = Base.unsafe_trunc(T, Float64(t))
-Base.unsafe_trunc(T::Type{<:Integer}, t::Takum32) = Base.unsafe_trunc(T, Float64(t))
-Base.unsafe_trunc(T::Type{<:Integer}, t::Takum64) = Base.unsafe_trunc(T, Float64(t))
-
-for int_type in (Int8, Int16, Int32, Int64, Int128, UInt8, UInt16, UInt32, UInt64, UInt128)
-	for takum_type in (Takum8, Takum16, Takum32, Takum64)
-		@eval begin
-			function Base.round(::Type{$int_type}, t::$takum_type)
-				if x == -1
-					return -Base.one($takum_type)
-				elseif x == 0
-					return Base.zero($takum_type)
-				elseif x == 1
-					return Base.one($takum_type)
-				else
-					throw(InexactError(:round, $int_type, t))
-				end
-			end
-		end
+function (::Type{I})(t::AnyTakum) where I <: Integer
+	if t == -1
+		return I(-1)
+	elseif t == 0
+		return I(0)
+	elseif t == 1
+		return I(1)
+	else
+		throw(InexactError(:round, I, t))
 	end
 end
 
