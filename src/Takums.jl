@@ -79,14 +79,22 @@ Base.ispow2(t::AnyTakum) = Base.isone(t)
 Base.iseven(t::AnyTakum) = Base.iszero(t)
 Base.isodd(t::AnyTakum) = Base.isone(t) || Base.isone(-t)
 
-# worst case precision n-12
-function Base.precision(T::Type{<:AnyTakum}; base::Integer = 2)
-	mantissa_bits = Dict(Takum8 => 0, Takum16 => 4, Takum32 => 20, Takum64 => 52)
+# precision
+_mantissa_bit_count(t::Takum8)  = @ccall libtakum.takum8_precision(reinterpret(Signed, t)::Int8)::UInt8
+_mantissa_bit_count(t::Takum16) = @ccall libtakum.takum16_precision(reinterpret(Signed, t)::Int16)::UInt8
+_mantissa_bit_count(t::Takum32) = @ccall libtakum.takum32_precision(reinterpret(Signed, t)::Int32)::UInt8
+_mantissa_bit_count(t::Takum64) = @ccall libtakum.takum64_precision(reinterpret(Signed, t)::Int64)::UInt8
+
+function Base.precision(t::AnyTakum; base::Integer = 2)
 	base > 1 || throw(DomainError(base, "`base` cannot be less than 2."))
-	m = mantissa_bits[T]
+	m = _mantissa_bit_count(t)
 	return base == 2 ? Int(m) : floor(Int, m / log2(base))
 end
-Base.precision(t::AnyTakum; base::Integer=2) = precision(typeof(t); base)
+
+# For the types we determine the precision of the zero of said type, as this returns
+# the worst-case precision, consistent with what you obtain with the respective
+# IEEE 754 precision functions
+Base.precision(T::Type{<:AnyTakum}; base::Integer = 2) = precision(zero(T); base)
 
 # rounding
 Base.round(t::AnyTakum) = typeof(t)(Base.round(Float64(t)))
