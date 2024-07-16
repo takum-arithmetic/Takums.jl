@@ -277,7 +277,7 @@ function Base.show(io::IO, t::AnyTakum)
 	else
 		has_type_info || Base.print(io, string(typeof(t)) * "(")
 		@static if VERSION ≥ v"1.7"
-			@Printf.printf(IOContext(io, :typeinfo=>typeof(t)), "%.*g", Base.precision(t; base = 10), Float64(t))
+			@Printf.printf(IOContext(io, :typeinfo=>typeof(t)), "%.*g", max(4, 1 + Base.precision(t; base = 10)), Float64(t))
 		else
 			@Printf.printf(IOContext(io, :typeinfo=>typeof(t)), "%f", Float64(t))
 		end
