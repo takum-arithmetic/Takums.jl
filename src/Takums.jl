@@ -210,6 +210,11 @@ Base.promote_rule(::Type{Takum64}, ::Type{Takum8}) = Takum64
 Base.promote_rule(::Type{Takum64}, ::Type{Takum16}) = Takum64
 Base.promote_rule(::Type{Takum64}, ::Type{Takum32}) = Takum64
 
+# IEEE 754 floating point promote rules
+Base.promote_rule(::Type{Float16}, ::Type{AnyTakum}) = Float16
+Base.promote_rule(::Type{Float32}, ::Type{AnyTakum}) = Float32
+Base.promote_rule(::Type{Float64}, ::Type{AnyTakum}) = Float64
+
 # arithmetic
 Base.:(+)(x::Takum8,  y::Takum8)  = Base.bitcast(Takum8,  @ccall libtakum.takum8_addition(reinterpret(Signed, x)::Int8, reinterpret(Signed, y)::Int8)::Int8)
 Base.:(+)(x::Takum16, y::Takum16) = Base.bitcast(Takum16, @ccall libtakum.takum16_addition(reinterpret(Signed, x)::Int16, reinterpret(Signed, y)::Int16)::Int16)
