@@ -96,6 +96,13 @@ end
 # IEEE 754 precision functions
 Base.precision(T::Type{<:AnyTakum}; base::Integer = 2) = precision(zero(T); base)
 
+# eps (follow definition; for the types it is simply eps(Takum_(1.0))
+Base.eps(t::AnyTakum)     = max(t - prevfloat(t), nextfloat(t) - t)
+Base.eps(::Type{Takum8})  = Base.bitcast(Takum8,  0x2b)
+Base.eps(::Type{Takum16}) = Base.bitcast(Takum16, 0x1f2f)
+Base.eps(::Type{Takum32}) = Base.bitcast(Takum32, 0x160bc2b0)
+Base.eps(::Type{Takum64}) = Base.bitcast(Takum64, 0x0d7a50987ab4d7df)
+
 # rounding
 Base.round(t::AnyTakum) = typeof(t)(Base.round(Float64(t)))
 
