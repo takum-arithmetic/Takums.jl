@@ -112,6 +112,7 @@ Base.round(t::AnyTakum, r::RoundingMode{:Up})      = typeof(t)(Base.ceil(Float64
 Base.round(t::AnyTakum, r::RoundingMode{:Nearest}) = typeof(t)(Base.round(Float64(t)))
 
 Base.trunc(t::AnyTakum) = Base.signbit(t) ? Base.ceil(t) : Base.floor(t)
+Base.trunc(::Type{T}, t::AnyTakum) where {T <: Integer} = Base.trunc(T, Float64(t))
 
 # type limits
 Base.typemin(::Type{Takum8})  = NaR8
