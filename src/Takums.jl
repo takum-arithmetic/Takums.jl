@@ -249,6 +249,33 @@ Base.:(^)(x::Takum16, y::Takum16) = Base.bitcast(Takum16, @ccall libtakum.takum1
 Base.:(^)(x::Takum32, y::Takum32) = Base.bitcast(Takum32, @ccall libtakum.takum32_power(reinterpret(Signed, x)::Int32, reinterpret(Signed, y)::Int32)::Int32)
 Base.:(^)(x::Takum64, y::Takum64) = Base.bitcast(Takum64, @ccall libtakum.takum64_power(reinterpret(Signed, x)::Int64, reinterpret(Signed, y)::Int64)::Int64)
 
+function Base.:(^)(t::AnyTakum, n::Integer)
+	if n == 0
+		return one(t)
+	else
+		nabs = abs(n)
+
+		# get the number of bit digits
+		maxpow = ceil(Int, log(2, nabs))
+		t2pow = t
+		nshift = nabs
+		res = one(t)
+
+		for i in 0:maxpow
+			# if the i'th bit is set in n multiply res with
+			# t^(2^i) to accumulate it into the product
+			if nshift & 1 == 1
+				res *= t2pow
+			end
+
+			t2pow *= t2pow
+			nshift >>= 1
+		end
+
+		return n < 0 ? inv(res) : res
+	end
+end
+
 Base.:(-)(t::AnyTakum) = Base.bitcast(typeof(t), -reinterpret(Signed, t))
 
 # TODO ^(Takum, Takum) and ^(Takum, Integer)
