@@ -23,6 +23,15 @@ const NaR16 = Base.bitcast(Takum16, 0x8000)
 const NaR32 = Base.bitcast(Takum32, 0x80000000)
 const NaR64 = Base.bitcast(Takum64, 0x8000000000000000)
 
+# array takum types with their corresponding integer types for
+# metaprogramming within the module
+takum_types = [
+	(:Takum8, :Int8),
+	(:Takum16, :Int16),
+	(:Takum32, :Int32),
+	(:Takum64, :Int64),
+]
+
 # integer reinterpret casts
 Base.reinterpret(::Type{Unsigned}, x::Takum8)  = reinterpret(UInt8, x)
 Base.reinterpret(::Type{Unsigned}, x::Takum16) = reinterpret(UInt16, x)
@@ -341,25 +350,55 @@ Base.prevfloat(t::Takum16) = isnar(t) ? NaR16 : Base.bitcast(Takum16, reinterpre
 Base.prevfloat(t::Takum32) = isnar(t) ? NaR32 : Base.bitcast(Takum32, reinterpret(Unsigned, t) - UInt32(1))
 Base.prevfloat(t::Takum64) = isnar(t) ? NaR64 : Base.bitcast(Takum64, reinterpret(Unsigned, t) - UInt64(1))
 
-# TODO math functions
+# math functions
 Base.abs(t::AnyTakum) = (t < 0) ? -t : t
 Base.abs2(t::AnyTakum) = t * t
 
-Base.sqrt(t::Takum8)  = Base.bitcast(Takum8,  @ccall libtakum.takum8_square_root(reinterpret(Signed, t)::Int8)::Int8)
-Base.sqrt(t::Takum16) = Base.bitcast(Takum16, @ccall libtakum.takum16_square_root(reinterpret(Signed, t)::Int16)::Int16)
-Base.sqrt(t::Takum32) = Base.bitcast(Takum32, @ccall libtakum.takum32_square_root(reinterpret(Signed, t)::Int32)::Int32)
-Base.sqrt(t::Takum64) = Base.bitcast(Takum64, @ccall libtakum.takum64_square_root(reinterpret(Signed, t)::Int64)::Int64)
+math_functions = [
+	(:sqrt,  :square_root),
+	(:cbrt,  :integer_root, :(3::Int64)),
+	(:exp,   :exp),
+	(:exp2,  :(2_raised)),
+	(:exp10, :(10_raised)),
+	(:expm1, :exp_minus_1),
+	(:log,   :ln),
+	(:log2,  :lb),
+	(:log10, :lg),
+	(:log1p, :ln_1_plus),
+	(:sin,   :sin),
+	(:cos,   :cos),
+	(:tan,   :tan),
+	(:csc,   :csc),
+	(:sec,   :sec),
+	(:cot,   :cot),
+	(:asin,  :arcsin),
+	(:acos,  :arccos),
+	(:atan,  :arctan),
+	(:acsc,  :arccsc),
+	(:asec,  :arcsec),
+	(:acot,  :arccot),
+	(:sinh,  :sinh),
+	(:cosh,  :cosh),
+	(:tanh,  :tanh),
+	(:csch,  :csch),
+	(:sech,  :sech),
+	(:coth,  :coth),
+	(:asinh, :arsinh),
+	(:acosh, :arcosh),
+	(:atanh, :artanh),
+	(:acsch, :arcsch),
+	(:asech, :arsech),
+	(:acoth, :arcoth),
+]
 
-for func in (:cbrt, :exp, :exp2, :exp10, :expm1,
-          :log, :log2, :log10, :log1p,
-          :sin, :cos, :tan, :csc, :sec, :cot,
-          :asin, :acos, :atan, :acsc, :asec, :acot,
-          :sinh, :cosh, :tanh, :csch, :sech, :coth,
-          :asinh, :acosh, :atanh, :acsch, :asech, :acoth)
-  @eval begin
-     # TODO call into library
-     Base.$func(t::AnyTakum)  = typeof(t)(Base.$func(Float64(t)))
-  end
+for (takum_type, takum_integer_type) in takum_types
+	for (math_function, library_math_function, arguments...) in math_functions
+		@eval begin
+			Base.$math_function(t::$takum_type) = Base.bitcast($takum_type,
+				@ccall libtakum.$(Symbol(lowercase(string(takum_type)), "_", library_math_function))(
+				reinterpret(Signed, t)::$takum_integer_type, $(arguments...))::$takum_integer_type)
+		end
+	end
 end
 
 # miscellaneous
