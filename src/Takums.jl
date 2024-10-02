@@ -356,7 +356,7 @@ Base.abs2(t::AnyTakum) = t * t
 
 math_functions = [
 	(:sqrt,  :square_root),
-	(:cbrt,  :integer_root, :(3::Int64)),
+	(:cbrt,  :root, :(3::Int64)),
 	(:exp,   :exp),
 	(:exp2,  :(2_raised)),
 	(:exp10, :(10_raised)),
