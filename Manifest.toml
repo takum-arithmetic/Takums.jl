@@ -15,9 +15,9 @@ version = "1.11.0"
 
 [[deps.JLLWrappers]]
 deps = ["Artifacts", "Preferences"]
-git-tree-sha1 = "f389674c99bfcde17dc57454011aa44d5a260a40"
+git-tree-sha1 = "be3dc50a92e5a386872a493a10050136d4703f9b"
 uuid = "692b3bcd-3c85-4b1f-b108-f13ce0eb3210"
-version = "1.6.0"
+version = "1.6.1"
 
 [[deps.Libdl]]
 uuid = "8f399da3-3557-5675-b5ff-fb832c97cbdb"
@@ -51,6 +51,6 @@ version = "1.11.0"
 
 [[deps.libtakum_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
-git-tree-sha1 = "efc66b50f6fb2938e9a72c4b58d7784e0f1d9ea4"
+git-tree-sha1 = "ba151e05088ec8376017ee0468be8db1ea40ae15"
 uuid = "2acead13-4190-5b23-9738-715dd9fd1a00"
-version = "0.4.0+0"
+version = "0.5.0+0"
