@@ -545,9 +545,12 @@ math_functions = [
 	(:sinh,  :sinh),
 	(:sqrt,  :square_root),
 	(:tan,   :tan),
-	(:tanpi, :tan_pi_times),
 	(:tanh,  :tanh),
 ]
+
+@static if VERSION ≥ v"1.10"
+	push!(math_functions, (:tanpi, :tan_pi_times))
+end
 
 for (takum_type, takum_type_cname, takum_integer_type) in takum_types
 	for (math_function, library_math_function, arguments...) in math_functions
