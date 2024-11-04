@@ -491,41 +491,54 @@ Base.prevfloat(t::LinearTakum64) = isnar(t) ? NaRLinearTakum64 : Base.bitcast(Li
 Base.abs(t::AnyTakum) = (t < 0) ? -t : t
 Base.abs2(t::AnyTakum) = t * t
 
+# 2-argument arctangent
+Base.atan(x::Takum8,  y::Takum8)  = Base.bitcast(Takum8,  @ccall libtakum.takum8_arctan2(reinterpret(Signed, x)::Int8, reinterpret(Signed, y)::Int8)::Int8)
+Base.atan(x::Takum16, y::Takum16) = Base.bitcast(Takum16, @ccall libtakum.takum16_arctan2(reinterpret(Signed, x)::Int16, reinterpret(Signed, y)::Int16)::Int16)
+Base.atan(x::Takum32, y::Takum32) = Base.bitcast(Takum32, @ccall libtakum.takum32_arctan2(reinterpret(Signed, x)::Int32, reinterpret(Signed, y)::Int32)::Int32)
+Base.atan(x::Takum64, y::Takum64) = Base.bitcast(Takum64, @ccall libtakum.takum64_arctan2(reinterpret(Signed, x)::Int64, reinterpret(Signed, y)::Int64)::Int64)
+Base.atan(x::LinearTakum8,  y::LinearTakum8)  = Base.bitcast(LinearTakum8,  @ccall libtakum.takum_linear8_arctan2(reinterpret(Signed, x)::Int8, reinterpret(Signed, y)::Int8)::Int8)
+Base.atan(x::LinearTakum16, y::LinearTakum16) = Base.bitcast(LinearTakum16, @ccall libtakum.takum_linear16_arctan2(reinterpret(Signed, x)::Int16, reinterpret(Signed, y)::Int16)::Int16)
+Base.atan(x::LinearTakum32, y::LinearTakum32) = Base.bitcast(LinearTakum32, @ccall libtakum.takum_linear32_arctan2(reinterpret(Signed, x)::Int32, reinterpret(Signed, y)::Int32)::Int32)
+Base.atan(x::LinearTakum64, y::LinearTakum64) = Base.bitcast(LinearTakum64, @ccall libtakum.takum_linear64_arctan2(reinterpret(Signed, x)::Int64, reinterpret(Signed, y)::Int64)::Int64)
+
 math_functions = [
-	(:sqrt,  :square_root),
+	(:acos,  :arccos),
+	(:acosh, :arcosh),
+	(:acot,  :arccot),
+	(:acoth, :arcoth),
+	(:acsc,  :arccsc),
+	(:acsch, :arcsch),
+	(:asec,  :arcsec),
+	(:asech, :arsech),
+	(:asin,  :arcsin),
+	(:asinh, :arsinh),
+	(:atan,  :arctan),
+	(:atanh, :artanh),
 	(:cbrt,  :root, :(3::Int64)),
+	(:cos,   :cos),
+	(:cospi, :cos_pi_times),
+	(:cosh,  :cosh),
+	(:cot,   :cot),
+	(:coth,  :coth),
+	(:csc,   :csc),
+	(:csch,  :csch),
 	(:exp,   :exp),
-	(:exp2,  :(2_raised)),
 	(:exp10, :(10_raised)),
+	(:exp2,  :(2_raised)),
 	(:expm1, :exp_minus_1),
 	(:log,   :ln),
-	(:log2,  :lb),
 	(:log10, :lg),
 	(:log1p, :ln_1_plus),
-	(:sin,   :sin),
-	(:cos,   :cos),
-	(:tan,   :tan),
-	(:csc,   :csc),
+	(:log2,  :lb),
 	(:sec,   :sec),
-	(:cot,   :cot),
-	(:asin,  :arcsin),
-	(:acos,  :arccos),
-	(:atan,  :arctan),
-	(:acsc,  :arccsc),
-	(:asec,  :arcsec),
-	(:acot,  :arccot),
-	(:sinh,  :sinh),
-	(:cosh,  :cosh),
-	(:tanh,  :tanh),
-	(:csch,  :csch),
 	(:sech,  :sech),
-	(:coth,  :coth),
-	(:asinh, :arsinh),
-	(:acosh, :arcosh),
-	(:atanh, :artanh),
-	(:acsch, :arcsch),
-	(:asech, :arsech),
-	(:acoth, :arcoth),
+	(:sin,   :sin),
+	(:sinpi, :sin_pi_times),
+	(:sinh,  :sinh),
+	(:sqrt,  :square_root),
+	(:tan,   :tan),
+	(:tanpi, :tan_pi_times),
+	(:tanh,  :tanh),
 ]
 
 for (takum_type, takum_type_cname, takum_integer_type) in takum_types
