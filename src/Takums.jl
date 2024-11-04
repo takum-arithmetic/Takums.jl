@@ -106,11 +106,13 @@ isnar(t::AnyTakum16) = Base.isnan(t)
 isnar(t::AnyTakum32) = Base.isnan(t)
 isnar(t::AnyTakum64) = Base.isnan(t)
 
-# TODO
 Base.issubnormal(t::AnyTakum) = false
-Base.ispow2(t::AnyTakum) = Base.isone(t)
-Base.iseven(t::AnyTakum) = Base.iszero(t)
-Base.isodd(t::AnyTakum) = Base.isone(t) || Base.isone(-t)
+Base.ispow2(t::Union{Takum8, Takum16, Takum32, Takum64}) = Base.isone(t)
+Base.ispow2(t::Union{LinearTakum8, LinearTakum16, LinearTakum32, LinearTakum64}) = Base.ispow2(Float64(t))
+Base.iseven(t::Union{Takum8, Takum16, Takum32, Takum64}) = Base.iszero(t)
+Base.iseven(t::Union{LinearTakum8, LinearTakum16, LinearTakum32, LinearTakum64}) = Base.iseven(Float64(t))
+Base.isodd(t::Union{Takum8, Takum16, Takum32, Takum64}) = Base.isone(t) || Base.isone(-t)
+Base.isodd(t::Union{LinearTakum8, LinearTakum16, LinearTakum32, LinearTakum64}) = Base.isodd(Float64(t))
 
 # precision
 _mantissa_bit_count(t::Takum8)  = @ccall libtakum.takum8_precision(reinterpret(Signed, t)::Int8)::UInt8
@@ -139,10 +141,10 @@ Base.eps(::Type{Takum8})  = Base.bitcast(Takum8,  0x2b)
 Base.eps(::Type{Takum16}) = Base.bitcast(Takum16, 0x1f2f)
 Base.eps(::Type{Takum32}) = Base.bitcast(Takum32, 0x160bc2b0)
 Base.eps(::Type{Takum64}) = Base.bitcast(Takum64, 0x0d7a50987ab4d7df)
-Base.eps(::Type{LinearTakum8})  = Base.bitcast(Takum8,  0x2b)
-Base.eps(::Type{LinearTakum16}) = Base.bitcast(Takum16, 0x1f2f)
-Base.eps(::Type{LinearTakum32}) = Base.bitcast(Takum32, 0x160bc2b0)
-Base.eps(::Type{LinearTakum64}) = Base.bitcast(Takum64, 0x0d7a50987ab4d7df)
+Base.eps(::Type{LinearTakum8})  = Base.bitcast(Takum8,  0x30)
+Base.eps(::Type{LinearTakum16}) = Base.bitcast(Takum16, 0x2400)
+Base.eps(::Type{LinearTakum32}) = Base.bitcast(Takum32, 0x1a000000)
+Base.eps(::Type{LinearTakum64}) = Base.bitcast(Takum64, 0x1100000000000000)
 
 # rounding
 Base.round(t::AnyTakum) = typeof(t)(Base.round(Float64(t)))
@@ -180,8 +182,11 @@ Base.floatmax(T::Type{<:AnyTakum16}) = Base.bitcast(T, 0x7fff)
 Base.floatmax(T::Type{<:AnyTakum32}) = Base.bitcast(T, 0x7fffffff)
 Base.floatmax(T::Type{<:AnyTakum64}) = Base.bitcast(T, 0x7fffffffffffffff)
 
-# TODO
-Base.maxintfloat(::Type{T}) where {T<:AnyTakum} = T(1.0)
+Base.maxintfloat(::Type{T}) where {T<:Union{Takum8, Takum16, Takum32, Takum64}} = T(1.0)
+Base.maxintfloat(::Type{LinearTakum8}) = LinearTakum8(2.0 ^ 3)
+Base.maxintfloat(::Type{LinearTakum16}) = LinearTakum16(2.0 ^ 9)
+Base.maxintfloat(::Type{LinearTakum32}) = LinearTakum32(2.0 ^ 24)
+Base.maxintfloat(::Type{LinearTakum64}) = LinearTakum64(2.0 ^ 55)
 
 # conversions from floating-point
 Takum8(f::Float16) = Base.bitcast(Takum8, @ccall libtakum.takum8_from_float32(Float32(f)::Float32)::Int8)
@@ -253,8 +258,7 @@ Base.Float64(t::LinearTakum64) = @ccall libtakum.takum_linear64_to_float64(reint
 Base.unsafe_trunc(T::Type{<:Integer}, t::AnyTakum)  = Base.unsafe_trunc(T, Float64(t))
 Base.round(I::Type{<:Integer}, t::AnyTakum) = Base.round(I, Float64(t))
 
-# TODO
-function (::Type{I})(t::AnyTakum) where I <: Integer
+function (::Type{I})(t::Union{Takum8, Takum16, Takum32, Takum64}) where I <: Integer
 	if t == -1
 		return I(-1)
 	elseif t == 0
@@ -264,6 +268,10 @@ function (::Type{I})(t::AnyTakum) where I <: Integer
 	else
 		throw(InexactError(:round, I, t))
 	end
+end
+
+function (::Type{I})(t::Union{LinearTakum8, LinearTakum16, LinearTakum32, LinearTakum64}) where I <: Integer
+	return I(Float64(t))
 end
 
 # inter-takum conversions
