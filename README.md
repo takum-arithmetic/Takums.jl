@@ -42,3 +42,8 @@ Takum8(2.117)
 A wide range of functions are implemented for the number types. If you find
 a floating-point function you need that is not yet implemented, please raise
 an issue.
+
+## Author and License
+
+Takums.jl is developed by Laslo Hunhold and licensed under the ISC
+license. See LICENSE for copyright and license details.
