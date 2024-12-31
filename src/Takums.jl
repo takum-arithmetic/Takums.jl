@@ -228,6 +228,16 @@ LinearTakum32(i::Integer) = Base.convert(LinearTakum32, Base.convert(Float64, i)
 LinearTakum64(i::Integer) = Base.convert(LinearTakum64, Base.convert(Float64, i))
 Base.promote_rule(T::Type{<:AnyTakum}, ::Type{<:Integer}) = T
 
+# conversion from irrational numbers
+Takum8(i::AbstractIrrational) = Takum8(Float64(i))
+Takum16(i::AbstractIrrational) = Takum16(Float64(i))
+Takum32(i::AbstractIrrational) = Takum32(Float64(i))
+Takum64(i::AbstractIrrational) = Takum64(Float64(i))
+LinearTakum8(i::AbstractIrrational) = LinearTakum8(Float64(i))
+LinearTakum16(i::AbstractIrrational) = LinearTakum16(Float64(i))
+LinearTakum32(i::AbstractIrrational) = LinearTakum32(Float64(i))
+LinearTakum64(i::AbstractIrrational) = LinearTakum64(Float64(i))
+
 # conversions to floating-point
 Base.Float16(t::Takum8)  = Float16(@ccall libtakum.takum8_to_float32(reinterpret(Signed, t)::Int8)::Float32)
 Base.Float16(t::Takum16) = Float16(@ccall libtakum.takum16_to_float32(reinterpret(Signed, t)::Int16)::Float32)
