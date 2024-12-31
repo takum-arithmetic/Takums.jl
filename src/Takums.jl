@@ -488,23 +488,30 @@ Printf.tofloat(t::AnyTakum) = Float64(t)
 Base.bitstring(t::AnyTakum) = Base.bitstring(reinterpret(Unsigned, t))
 
 # next and previous number
-Base.nextfloat(t::Takum8)  = isnar(t) ? NaRTakum8  : Base.bitcast(Takum8, reinterpret(Unsigned, t) + UInt8(1))
-Base.nextfloat(t::Takum16) = isnar(t) ? NaRTakum16 : Base.bitcast(Takum16, reinterpret(Unsigned, t) + UInt16(1))
-Base.nextfloat(t::Takum32) = isnar(t) ? NaRTakum32 : Base.bitcast(Takum32, reinterpret(Unsigned, t) + UInt32(1))
-Base.nextfloat(t::Takum64) = isnar(t) ? NaRTakum64 : Base.bitcast(Takum64, reinterpret(Unsigned, t) + UInt64(1))
-Base.nextfloat(t::LinearTakum8)  = isnar(t) ? NaRLinearTakum8  : Base.bitcast(LinearTakum8, reinterpret(Unsigned, t) + UInt8(1))
-Base.nextfloat(t::LinearTakum16) = isnar(t) ? NaRLinearTakum16 : Base.bitcast(LinearTakum16, reinterpret(Unsigned, t) + UInt16(1))
-Base.nextfloat(t::LinearTakum32) = isnar(t) ? NaRLinearTakum32 : Base.bitcast(LinearTakum32, reinterpret(Unsigned, t) + UInt32(1))
-Base.nextfloat(t::LinearTakum64) = isnar(t) ? NaRLinearTakum64 : Base.bitcast(LinearTakum64, reinterpret(Unsigned, t) + UInt64(1))
+function Base.nextfloat(t::AnyTakum, n::Integer)
+	# preserve NaR
+	if isnar(t)
+		return t
+	end
 
-Base.prevfloat(t::Takum8)  = isnar(t) ? NaRTakum8  : Base.bitcast(Takum8,  reinterpret(Unsigned, t) - UInt8(1))
-Base.prevfloat(t::Takum16) = isnar(t) ? NaRTakum16 : Base.bitcast(Takum16, reinterpret(Unsigned, t) - UInt16(1))
-Base.prevfloat(t::Takum32) = isnar(t) ? NaRTakum32 : Base.bitcast(Takum32, reinterpret(Unsigned, t) - UInt32(1))
-Base.prevfloat(t::Takum64) = isnar(t) ? NaRTakum64 : Base.bitcast(Takum64, reinterpret(Unsigned, t) - UInt64(1))
-Base.prevfloat(t::LinearTakum8)  = isnar(t) ? NaRLinearTakum8  : Base.bitcast(LinearTakum8,  reinterpret(Unsigned, t) - UInt8(1))
-Base.prevfloat(t::LinearTakum16) = isnar(t) ? NaRLinearTakum16 : Base.bitcast(LinearTakum16, reinterpret(Unsigned, t) - UInt16(1))
-Base.prevfloat(t::LinearTakum32) = isnar(t) ? NaRLinearTakum32 : Base.bitcast(LinearTakum32, reinterpret(Unsigned, t) - UInt32(1))
-Base.prevfloat(t::LinearTakum64) = isnar(t) ? NaRLinearTakum64 : Base.bitcast(LinearTakum64, reinterpret(Unsigned, t) - UInt64(1))
+	# convert t to its integral representation
+	t_integer = reinterpret(Signed, t)
+
+	# set result to NaR and catch valid cases later
+	result_integer = typemin(t_integer)
+
+	# check if adding n would under- or overflow, return NaR otherwise
+	if (n >= 0 && t_integer <= reinterpret(Signed, typemax(t)) - n) ||
+	   (n < 0 && t_integer >= reinterpret(Signed, typemin(t)) + (-n))
+		result_integer = typeof(t_integer)(t_integer + n)
+	end
+
+	return Base.bitcast(typeof(t), result_integer)
+end
+Base.prevfloat(t::AnyTakum, n::Integer) = Base.nextfloat(t, -n)
+
+Base.nextfloat(t::AnyTakum) = Base.nextfloat(t, 1)
+Base.prevfloat(t::AnyTakum) = Base.prevfloat(t, 1)
 
 # math functions
 Base.abs(t::AnyTakum) = (t < 0) ? -t : t
