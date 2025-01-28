@@ -285,11 +285,17 @@ function LinearTakum64(f::BigFloat)
 		fprec = BigFloat(fprec; precision = precision(rawt))
 
 		# Now we have the raw takum, which we just need to fill
-		# with fprec's fraction bits. For this we use an obscure
-		# internal MPFR function and also unset the highest
-		# fraction bit, as it is stored implicitly in takums
-		fraction = Base.MPFR.truncated(UInt64, fprec.d::MPFR.BigFloatData, precision(rawt))
-		fraction &= ~(UInt64(2) ^ (precision(rawt) - 1))
+		# with fprec's fraction bits. For this we make use of
+		# the Base.decompose() function, returning in the first
+		# field an integer representing the fraction bits
+		# (including the implicit 1-bit, shifted all the way
+		# to the left).
+		#
+		# Given we limited the number of fraction bits, we can
+		# safely convert this BigInt into UInt64, shift out the
+		# implicit 1 bit and then shift it to the right such that
+		# it's flush to the right.
+		fraction = (UInt64(Base.decompose(fprec)[1]) << 1) >> (64 - (precision(rawt) - 1))
 
 		# Combine raw takum and fraction
 		result = Base.bitcast(LinearTakum64, Base.bitcast(UInt64, rawt) | fraction)
