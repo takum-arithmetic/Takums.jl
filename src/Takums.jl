@@ -2,8 +2,8 @@ module Takums
 
 import Base: AbstractFloat, Int, Int8, Int16, Int32, Int64, Integer, MPFR,
 	Signed, Unsigned, reinterpret
-
 import Printf
+import Random: rand, randexp, AbstractRNG, Sampler
 
 using libtakum_jll
 
@@ -653,6 +653,19 @@ for (takum_type, takum_type_cname, takum_integer_type) in takum_types
 		end
 	end
 end
+
+# random
+rand(rng::AbstractRNG, ::Sampler{T}) where {T <: AnyTakum8} = T(rand(rng, Float64))
+rand(rng::AbstractRNG, ::Sampler{T}) where {T <: AnyTakum16} = T(rand(rng, Float64))
+rand(rng::AbstractRNG, ::Sampler{T}) where {T <: AnyTakum32} = T(rand(rng, Float64))
+rand(rng::AbstractRNG, ::Sampler{Takum64}) = Takum64(rand(rng, Float64)) # TODO
+rand(rng::AbstractRNG, ::Sampler{LinearTakum64}) = setprecision(BigFloat, 60) do; LinearTakum64(rand(rng, BigFloat)) end
+
+randexp(rng::AbstractRNG, ::Sampler{T}) where {T <: AnyTakum8} = T(randexp(rng, Float64))
+randexp(rng::AbstractRNG, ::Sampler{T}) where {T <: AnyTakum16} = T(randexp(rng, Float64))
+randexp(rng::AbstractRNG, ::Sampler{T}) where {T <: AnyTakum32} = T(randexp(rng, Float64))
+randexp(rng::AbstractRNG, ::Sampler{Takum64}) = Takum64(randexp(rng, Float64)) # TODO
+randexp(rng::AbstractRNG, ::Sampler{LinearTakum64}) = setprecision(BigFloat, 60) do; LinearTakum64(randexp(rng, BigFloat)) end
 
 # miscellaneous
 Base.bswap(t::AnyTakum) = Base.bswap_int(t)
