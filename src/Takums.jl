@@ -71,10 +71,12 @@ Base.uinttype(::Type{<:AnyTakum16}) = UInt16
 Base.uinttype(::Type{<:AnyTakum32}) = UInt32
 Base.uinttype(::Type{<:AnyTakum64}) = UInt64
 
-Base.inttype(::Type{<:AnyTakum8})  = Int8
-Base.inttype(::Type{<:AnyTakum16}) = Int16
-Base.inttype(::Type{<:AnyTakum32}) = Int32
-Base.inttype(::Type{<:AnyTakum64}) = Int64
+@static if VERSION ≥ v"1.10"
+	Base.inttype(::Type{<:AnyTakum8})  = Int8
+	Base.inttype(::Type{<:AnyTakum16}) = Int16
+	Base.inttype(::Type{<:AnyTakum32}) = Int32
+	Base.inttype(::Type{<:AnyTakum64}) = Int64
+end
 
 # the only floating-point property that makes sense to implement for logarithmic takums is signbit()
 Base.signbit(t::AnyTakum8)  = (reinterpret(Unsigned, t) & 0x80) !== 0x00
