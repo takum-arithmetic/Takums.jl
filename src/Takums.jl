@@ -71,6 +71,11 @@ Base.uinttype(::Type{<:AnyTakum16}) = UInt16
 Base.uinttype(::Type{<:AnyTakum32}) = UInt32
 Base.uinttype(::Type{<:AnyTakum64}) = UInt64
 
+Base.inttype(::Type{<:AnyTakum8})  = Int8
+Base.inttype(::Type{<:AnyTakum16}) = Int16
+Base.inttype(::Type{<:AnyTakum32}) = Int32
+Base.inttype(::Type{<:AnyTakum64}) = Int64
+
 # the only floating-point property that makes sense to implement for logarithmic takums is signbit()
 Base.signbit(t::AnyTakum8)  = (reinterpret(Unsigned, t) & 0x80) !== 0x00
 Base.signbit(t::AnyTakum16) = (reinterpret(Unsigned, t) & 0x8000) !== 0x0000
@@ -78,8 +83,18 @@ Base.signbit(t::AnyTakum32) = (reinterpret(Unsigned, t) & 0x80000000) !== 0x0000
 Base.signbit(t::AnyTakum64) = (reinterpret(Unsigned, t) & 0x8000000000000000) !== 0x0000000000000000
 
 # left undefined are sign_mask, exponent_mask, exponent_one, exponent_half,
-# significand_mask, exponent_bias, exponent_bits, significand_bits, significand,
-# exponent, decompose, frexp, ldexp, for now also for linear takums
+# significand_mask, exponent_bias, exponent_bits, significand_bits,
+# decompose, for now also for linear takums
+#
+# TODO cleaner, possibly limit to LinearTakums only
+Base.exponent(t::AnyTakum) = exponent(Float64(t))
+Base.significand(t::AnyTakum) = ldexp(t, -Base.exponent(t))
+Base.ldexp(t::AnyTakum, e::Integer) = t * ((typeof(t))(2) .^ e)
+function Base.frexp(t::AnyTakum)
+	exp = isnan(t) ? 0 : (Base.exponent(t) + 1)
+	x = ldexp(t, -exp)
+	return (x, exp)
+end
 
 Base.iszero(t::AnyTakum8)  = reinterpret(Unsigned, t) === 0x00
 Base.iszero(t::AnyTakum16) = reinterpret(Unsigned, t) === 0x0000
