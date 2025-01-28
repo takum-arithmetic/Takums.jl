@@ -1,6 +1,6 @@
 name = "Takums"
 uuid = "e87ab966-852e-4d0b-9cf3-1c8693995dd4"
-version = "0.5.4"
+version = "0.6.0"
 authors = ["Laslo Hunhold"]
 
 [deps]
