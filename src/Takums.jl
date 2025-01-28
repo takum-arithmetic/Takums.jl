@@ -1,7 +1,7 @@
 module Takums
 
-import Base: AbstractFloat, Int, Int8, Int16, Int32, Int64, Integer, Signed,
-	Unsigned, reinterpret
+import Base: AbstractFloat, Int, Int8, Int16, Int32, Int64, Integer, MPFR,
+	Signed, Unsigned, reinterpret
 
 import Printf
 
@@ -141,7 +141,7 @@ _mantissa_bit_count(t::LinearTakum64) = @ccall libtakum.takum_linear64_precision
 
 function Base.precision(t::AnyTakum; base::Integer = 2)
 	base > 1 || throw(DomainError(base, "`base` cannot be less than 2."))
-	m = _mantissa_bit_count(t)
+	m = 1 + _mantissa_bit_count(t)
 	return base == 2 ? Int(m) : floor(Int, m / log2(base))
 end
 
@@ -243,15 +243,71 @@ LinearTakum32(i::Integer) = Base.convert(LinearTakum32, Base.convert(Float64, i)
 LinearTakum64(i::Integer) = Base.convert(LinearTakum64, Base.convert(Float64, i))
 Base.promote_rule(T::Type{<:AnyTakum}, ::Type{<:Integer}) = T
 
+# conversion from BigFloat
+Takum8(f::BigFloat) = Takum8(Float64(f))
+Takum16(f::BigFloat) = Takum16(Float64(f))
+Takum32(f::BigFloat) = Takum32(Float64(f))
+LinearTakum8(f::BigFloat) = LinearTakum8(Float64(f))
+LinearTakum16(f::BigFloat) = LinearTakum16(Float64(f))
+LinearTakum32(f::BigFloat) = LinearTakum32(Float64(f))
+
+function LinearTakum64(f::BigFloat)
+	if iszero(f)
+		# truncated() is buggy when the input is zero
+		return zero(LinearTakum64)
+	else
+		# take the absolute value so we are only working with
+		# positive values, as only then can we directly transplant
+		# the fraction bits
+		fabs = abs(f)
+
+		# first round the BigFloat to the maximum possible number
+		# of takum fraction bits, namely 1 + (64 - 5) = 60, as
+		# this possibly rounds the value and lets us obtain the
+		# exponent for further processing
+		f60 = BigFloat(fabs; precision = 60)
+
+		# Build a raw takum with f60's exponent
+		rawt = ldexp(one(LinearTakum64), exponent(f60))
+
+		# Obtain the number of fraction bits the raw takum can
+		# represent and round f60 down to this number of bits
+		fprec = BigFloat(f; precision = precision(rawt))
+
+		# During this process, fprec might have been rounded
+		# insofar that the exponent changed, which would require
+		# us to redo the whole process. We do it unconditionally,
+		# so we take the exponent of fprec, update the raw
+		# takum and round fprec accordingly to its capacity
+		rawt = ldexp(one(LinearTakum64), exponent(fprec))
+		fprec = BigFloat(fprec; precision = precision(rawt))
+
+		# Now we have the raw takum, which we just need to fill
+		# with fprec's fraction bits. For this we use an obscure
+		# internal MPFR function and also unset the highest
+		# fraction bit, as it is stored implicitly in takums
+		fraction = Base.MPFR.truncated(UInt64, fprec.d::MPFR.BigFloatData, precision(rawt))
+		fraction &= ~(UInt64(2) ^ (precision(rawt) - 1))
+
+		# Combine raw takum and fraction
+		result = Base.bitcast(LinearTakum64, Base.bitcast(UInt64, rawt) | fraction)
+
+		# Return the result, negating it if f was negative
+		return (f < 0) ? -result : result
+	end
+end
+
+# TODO Conversion from BigFloat to Takum64
+
 # conversion from irrational numbers
 Takum8(i::AbstractIrrational) = Takum8(Float64(i))
 Takum16(i::AbstractIrrational) = Takum16(Float64(i))
 Takum32(i::AbstractIrrational) = Takum32(Float64(i))
-Takum64(i::AbstractIrrational) = Takum64(Float64(i))
+Takum64(i::AbstractIrrational) = Takum64(Float64(i)) # TODO
 LinearTakum8(i::AbstractIrrational) = LinearTakum8(Float64(i))
 LinearTakum16(i::AbstractIrrational) = LinearTakum16(Float64(i))
 LinearTakum32(i::AbstractIrrational) = LinearTakum32(Float64(i))
-LinearTakum64(i::AbstractIrrational) = LinearTakum64(Float64(i))
+LinearTakum64(i::AbstractIrrational) = LinearTakum64(BigFloat(i; precision = 60))
 
 # conversions to floating-point
 Base.Float16(t::Takum8)  = Float16(@ccall libtakum.takum8_to_float32(reinterpret(Signed, t)::Int8)::Float32)
@@ -471,6 +527,7 @@ Base.:(<=)(x::T, y::T) where {T <: AnyTakum} = reinterpret(Signed, x) <= reinter
 
 Base.isequal(x::T, y::T) where {T <: AnyTakum} = (x == y)
 
+# TODO: widen for 64-bit to BigFloat
 Base.widen(::Type{Takum8}) = Takum16
 Base.widen(::Type{Takum16}) = Takum32
 Base.widen(::Type{Takum32}) = Takum64
