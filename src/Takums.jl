@@ -98,6 +98,38 @@ function Base.frexp(t::AnyTakum)
 	return (x, exp)
 end
 
+# decompose returns a triple (number, power, denominator) such that the
+# original value is (number * (2^power) / denominator)
+function Base.decompose(t::AnyTakum)::NTuple{3,Int}
+	U = Base.uinttype(typeof(t))
+
+	# cover special case
+	if isnan(t)
+		return U(0), 0, 0
+	elseif t == zero(t)
+		return U(0), 0, 1
+	end
+
+	# take the absolute value of the input takum so we can work
+	# with the fraction directly
+	tabs = abs(t)
+	denominator = (t < zero(t)) ? -1 : 1
+
+	# obtain the fraction bits by masking them out, set the
+	# fraction_count'th bit, as it is the implicit bit we now need
+	# to store explicitly
+	fraction_count = precision(tabs) - 1
+	number = reinterpret(U, tabs) & ((one(U) << fraction_count) - one(U))
+	number |= one(U) << fraction_count
+
+	# the power is the exponent minus the fraction bit count
+	power = exponent(tabs) - fraction_count
+
+	return number, power, denominator
+end
+
+# TODO implement decompose() for logarithmic takums separately
+
 Base.iszero(t::AnyTakum8)  = reinterpret(Unsigned, t) === 0x00
 Base.iszero(t::AnyTakum16) = reinterpret(Unsigned, t) === 0x0000
 Base.iszero(t::AnyTakum32) = reinterpret(Unsigned, t) === 0x00000000
