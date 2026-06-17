@@ -493,6 +493,11 @@ Base.:(+)(x::LogTakum16, y::LogTakum16) = Base.bitcast(LogTakum16, @ccall libtak
 Base.:(+)(x::LogTakum32, y::LogTakum32) = Base.bitcast(LogTakum32, @ccall libtakum.takum_log32_addition(reinterpret(Signed, x)::Int32, reinterpret(Signed, y)::Int32)::Int32)
 Base.:(+)(x::LogTakum64, y::LogTakum64) = Base.bitcast(LogTakum64, @ccall libtakum.takum_log64_addition(reinterpret(Signed, x)::Int64, reinterpret(Signed, y)::Int64)::Int64)
 
+Base.rem(x::T, y::T)       where {T <: AnyTakum} = T(rem(Float64(x), Float64(y)))
+Base.rem(x::T, y::Integer) where {T <: AnyTakum} = T(rem(Float64(x), Float64(y)))
+Base.mod(x::T, y::T)       where {T <: AnyTakum} = T(mod(Float64(x), Float64(y)))
+Base.mod(x::T, y::Integer) where {T <: AnyTakum} = T(mod(Float64(x), Float64(y)))
+
 Base.:(-)(x::Takum8,  y::Takum8)  = Base.bitcast(Takum8,  @ccall libtakum.takum8_subtraction(reinterpret(Signed, x)::Int8, reinterpret(Signed, y)::Int8)::Int8)
 Base.:(-)(x::Takum16, y::Takum16) = Base.bitcast(Takum16, @ccall libtakum.takum16_subtraction(reinterpret(Signed, x)::Int16, reinterpret(Signed, y)::Int16)::Int16)
 Base.:(-)(x::Takum32, y::Takum32) = Base.bitcast(Takum32, @ccall libtakum.takum32_subtraction(reinterpret(Signed, x)::Int32, reinterpret(Signed, y)::Int32)::Int32)
@@ -709,5 +714,5 @@ randexp(rng::AbstractRNG, ::Sampler{LogTakum64}) = LogTakum64(randexp(rng, Float
 Base.bswap(t::AnyTakum) = Base.bswap_int(t)
 
 # TODO: muladd?, rem?, mod?, random, isinf alias of isfinite?, takum?
-
+Base.convert(::Type{T}, z::Complex) where {T <: AnyTakum} = T(real(z))
 end
